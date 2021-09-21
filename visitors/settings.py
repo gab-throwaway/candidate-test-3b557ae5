@@ -8,6 +8,14 @@ from django.conf import settings
 def _setting(key: str, default: str) -> str:
     return getattr(settings, key, default)
 
+INSTALLED_APPS: str = (
+        'visitors'
+    )
+
+MIDDLEWARE: str = [
+    'visitors.middleware.VisitorRequestMiddleware',
+    'visitors.middleware.VisitorSessionMiddleware'
+]
 
 # session key used to store visitor.uuid
 VISITOR_SESSION_KEY: str = _setting("VISITOR_SESSION_KEY", "visitor:session")
