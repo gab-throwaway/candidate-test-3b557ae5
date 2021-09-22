@@ -55,6 +55,7 @@ class VisitorsAdmin(admin.ModelAdmin):
         "expires_at",
         "is_active",
         "_is_valid",
+        "sessions_left",
     )
     readonly_fields = (
         "uuid",

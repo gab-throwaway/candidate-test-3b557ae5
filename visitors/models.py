@@ -51,6 +51,10 @@ class Visitor(models.Model):
             "Set to False to disable the visitor link and prevent further access."
         ),
     )
+    sessions_left = models.IntegerField(
+        default=7,
+        help_text=_lazy("Amount of times this visitor pass can be used.")
+    )
 
     class Meta:
         verbose_name = "Visitor pass"
@@ -112,6 +116,7 @@ class Visitor(models.Model):
             "email": self.email,
             "scope": self.scope,
             "context": self.context,
+            "sessions_left": self.sessions_left,
         }
 
     def tokenise(self, url: str) -> str:
