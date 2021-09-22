@@ -143,6 +143,22 @@ class TestVisitorSessionMiddleware(TestVisitorMiddlewareBase):
         visitor.refresh_from_db()
         request = self.request("/", is_visitor=True, visitor=visitor)
         request.session[VISITOR_SESSION_KEY] = str(uuid.uuid4())
-        middleware = VisitorSessionMiddleware(lambda r: r)
         middleware(request)
         assert not request.visitor
+
+    def test_zero_sessions_left_access_via_requests(self, visitor: Visitor) -> None:
+        """ When sessions_left == 0, the visitor should still be able to make
+        requests with a valid session """
+        initial_sessions = visitor.sessions_left
+        # visit 1 - with sessions_left == 1
+        request = self.request("/", is_visitor=True, visitor=visitor)
+        request.session[VISITOR_SESSION_KEY] = visitor.uuid
+        middleware = VisitorSessionMiddleware(lambda r: r)
+        middleware(request)
+        assert request.visitor
+        
+        # visit 2 - with sessions_left == 0
+        request = self.request("/")
+        request.session[VISITOR_SESSION_KEY] = visitor.uuid
+        middleware(request)
+        assert request.visitor
