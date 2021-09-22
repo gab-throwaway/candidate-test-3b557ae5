@@ -71,6 +71,7 @@ class VisitorSessionMiddleware:
                 request.visitor.use_session()
                 session.stash_visitor_uuid(request)
             except InvalidVisitorPass as ex:
+                request.visitor = None
                 logger.debug("Invalid access request: %s", ex)
             return self.get_response(request)
 

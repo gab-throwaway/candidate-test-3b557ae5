@@ -13,7 +13,7 @@ from visitors.settings import VISITOR_SESSION_KEY
 
 @pytest.fixture
 def visitor() -> Visitor:
-    return Visitor.objects.create(email="fred@example.com", scope="foo", sessions_left=10)
+    return Visitor.objects.create(email="fred@example.com", scope="foo", sessions_left=1)
 
 
 class Session(dict):
@@ -127,3 +127,22 @@ class TestVisitorSessionMiddleware(TestVisitorMiddlewareBase):
         middleware(request)
         visitor.refresh_from_db()
         assert visitor.sessions_left < initial_sessions
+
+    def test_zero_sessions_left_no_access(self, visitor: Visitor) -> None:
+        """ When sessions_left == 0, the visitor should not have access """
+        initial_sessions = visitor.sessions_left
+        
+        # visit 1 - with sessions_left == 1
+        request = self.request("/", is_visitor=True, visitor=visitor)
+        request.session[VISITOR_SESSION_KEY] = str(uuid.uuid4())
+        middleware = VisitorSessionMiddleware(lambda r: r)
+        middleware(request)
+        assert request.visitor
+        
+        # visit 2 - with sessions_left == 0
+        visitor.refresh_from_db()
+        request = self.request("/", is_visitor=True, visitor=visitor)
+        request.session[VISITOR_SESSION_KEY] = str(uuid.uuid4())
+        middleware = VisitorSessionMiddleware(lambda r: r)
+        middleware(request)
+        assert not request.visitor
