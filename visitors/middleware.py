@@ -67,7 +67,11 @@ class VisitorSessionMiddleware:
         # start with is_visitor=False and pick up the visitor info from
         # the session.
         if request.visitor:
-            session.stash_visitor_uuid(request)
+            try:
+                request.visitor.use_session()
+                session.stash_visitor_uuid(request)
+            except InvalidVisitorPass as ex:
+                logger.debug("Invalid access request: %s", ex)
             return self.get_response(request)
 
         # We don't have a visitor object, but there may be one in the session

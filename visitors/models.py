@@ -101,6 +101,12 @@ class Visitor(models.Model):
         if self.has_expired:
             raise InvalidVisitorPass("Visitor pass has expired")
 
+    def use_session(self) -> None:
+        if self.sessions_left == 0:
+            raise InvalidVisitorPass("Visitor pass has no sessions left")
+        self.sessions_left = models.F('sessions_left') - 1
+        self.save()
+
     def serialize(self) -> dict:
         """
         Return JSON-serializable representation.

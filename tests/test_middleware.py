@@ -13,7 +13,7 @@ from visitors.settings import VISITOR_SESSION_KEY
 
 @pytest.fixture
 def visitor() -> Visitor:
-    return Visitor.objects.create(email="fred@example.com", scope="foo")
+    return Visitor.objects.create(email="fred@example.com", scope="foo", sessions_left=10)
 
 
 class Session(dict):
@@ -116,3 +116,14 @@ class TestVisitorSessionMiddleware(TestVisitorMiddlewareBase):
         assert not request.user.is_visitor
         assert not request.visitor
         assert not request.session.get(VISITOR_SESSION_KEY)
+
+    def test_sessions_left_reduces(self, visitor: Visitor) -> None:
+        """ The amount of sessions_left should reduce when the 
+        visitor accesses the site """
+        initial_sessions = visitor.sessions_left
+        request = self.request("/", is_visitor=True, visitor=visitor)
+        request.session[VISITOR_SESSION_KEY] = str(uuid.uuid4())
+        middleware = VisitorSessionMiddleware(lambda r: r)
+        middleware(request)
+        visitor.refresh_from_db()
+        assert visitor.sessions_left < initial_sessions
